@@ -1,0 +1,19 @@
+{
+  "name": "facerecognition_mobilebio",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NamNguyen0905/FaceRecognition_MobileBio.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/NamNguyen0905/FaceRecognition_MobileBio/issues"
+  },
+  "homepage": "https://github.com/NamNguyen0905/FaceRecognition_MobileBio#readme"
+}
