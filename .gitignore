@@ -1,3 +1,5 @@
 node_modules
-dataset
-test
+
+Project 1 Database
+__pycache__
+.DS_Store
