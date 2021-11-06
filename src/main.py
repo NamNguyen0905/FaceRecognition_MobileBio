@@ -202,9 +202,17 @@ def main():
     
     
     ''' With facial hair feature '''
+    accuracy_base, accuracy_HQ, accuracy_LQ =  feature_performance(with_hair, labels, imgs_quality)
+    print("Accuracy for not separating image quality: %.2f" % accuracy_base)
+    print("Accuracy for getting high-quality image as test data: %.2f" % accuracy_HQ)
+    print("Accuracy for getting low-quality image as test data: %.2f" % accuracy_LQ)
     
     
     ''' Wearing mask feature '''
+    accuracy_base, accuracy_HQ, accuracy_LQ =  feature_performance(wear_mask, labels, imgs_quality)
+    print("Accuracy for not separating image quality: %.2f" % accuracy_base)
+    print("Accuracy for getting high-quality image as test data: %.2f" % accuracy_HQ)
+    print("Accuracy for getting low-quality image as test data: %.2f" % accuracy_LQ)
     
     
 main()
