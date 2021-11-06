@@ -4,51 +4,62 @@ import numpy as np
 import cv2
 import math
 import os
+import time
 
-def distances1(points):
+
+def EuclideanDist(points):
     dist = []
     for i in range(points.shape[0]):
         for j in range(points.shape[0]):
-            p1 = points[i,:]
-            p2 = points[j,:]      
-            dist.append( math.sqrt((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2) )
+            p1 = points[i, :]
+            p2 = points[j, :]
+            dist.append(math.sqrt((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2))
     return dist
 
-def distances2(points):
+
+def ManhattanDist(points):
     dist = []
     for i in range(points.shape[0]):
         for j in range(points.shape[0]):
-            p1 = points[i,:]
-            p2 = points[j,:]      
-            dist.append( abs(p1[0] - p2[0]) + abs(p1[1] - p2[1]) )
+            p1 = points[i, :]
+            p2 = points[j, :]
+            dist.append(abs(p1[0] - p2[0]) + abs(p1[1] - p2[1]))
     return dist
+
 
 def get_bounding_box(rect):
-	# take a bounding predicted by dlib and convert it
-	# to the format (x, y, w, h) 
-	x = rect.left()
-	y = rect.top()
-	w = rect.right() - x
-	h = rect.bottom() - y 
-	return x, y, w, h
+    # take a bounding predicted by dlib and convert it
+    # to the format (x, y, w, h)
+    x = rect.left()
+    y = rect.top()
+    w = rect.right() - x
+    h = rect.bottom() - y
+    return x, y, w, h
+
 
 def shape_to_np(shape, num_coords, dtype="int"):
-	# initialize the list of (x, y)-coordinates
-	coords = np.zeros((num_coords, 2), dtype=dtype)
- 	# loop over the facial landmarks and convert them
-	# to a 2-tuple of (x, y)-coordinates
-	for i in range(0, num_coords):
-		coords[i] = (shape.part(i).x, shape.part(i).y) 
-	# return the list of (x, y)-coordinates
-	return coords
+    # initialize the list of (x, y)-coordinates
+    coords = np.zeros((num_coords, 2), dtype=dtype)
+    # loop over the facial landmarks and convert them
+    # to a 2-tuple of (x, y)-coordinates
+    for i in range(0, num_coords):
+        coords[i] = (shape.part(i).x, shape.part(i).y)
+    # return the list of (x, y)-coordinates
+    return coords
+
 
 def get_landmarks(images, labels, save_directory="", num_coords=5, to_save=False):
-    
+
     print("Getting %d facial landmarks" % num_coords)
-    landmarks = []
+    landmarks_withoutHair = []
+    landmarks_withHair = []
+    landmarks_wearMask = []
     new_labels = []
     img_ct = 0
+    count = 0
     
+    start_time = time.time()
+
     if num_coords == 5:
         predictor_path = '../shape_predictor_5_face_landmarks.dat'
     else:
@@ -64,38 +75,47 @@ def get_landmarks(images, labels, save_directory="", num_coords=5, to_save=False
         img_ct += 1
         detected_faces = detector(img, 1)
         for d in detected_faces:
-            new_labels.append(label)
-            x, y, w, h  = get_bounding_box(d) 
-            # Get the landmarks/parts for the face in box d.
-            points = shape_to_np(
-                    predictor(img, d), 
-                    num_coords) 
-                        
-            dist_1 = distances1(points)    
-            dist_2 = distances2(points)  
-
-            dist = dist_1 + dist_2              
-               
-            landmarks.append(dist)    
+            count += 1
             
+            new_labels.append(label)
+            x, y, w, h = get_bounding_box(d)
+            # Get the landmarks/parts for the face in box d.
+            points = shape_to_np(predictor(img, d), num_coords)
+            
+            # Get landmarks for feature of without hair
+            without_hair = np.concatenate((points[27:49], points[54:]), axis=0)
+            landmarks_withoutHair.append(EuclideanDist(without_hair) + ManhattanDist(without_hair)) # Get distances of feature fusion
+            
+            # Get landmarks for feature of with hair
+            with_hair = points
+            landmarks_withHair.append(EuclideanDist(with_hair) + ManhattanDist(with_hair)) # Get distances of feature fusion
+            
+            # Get landmarks for feature of wearing a mask
+            wear_mask = np.concatenate((points[0:31], points[36:48]), axis=0)
+            landmarks_wearMask.append(EuclideanDist(wear_mask) + ManhattanDist(wear_mask)) # Get distances of feature fusion
+            
+            
+
             if to_save:
                 for (x_, y_) in points:
-                    cv2.circle(img, 
-                           (x_, y_), 
-                           1, 
-                           (0, 255, 0), 
-                           -1)
+                    cv2.circle(img,
+                               (x_, y_),
+                               15,
+                               (0, 0, 255),
+                               -1)
+
                 plt.figure()
                 plt.imshow(img)
                 if not os.path.isdir(save_directory):
                     os.mkdir(save_directory)
                 plt.savefig(save_directory + label + '%d.png' % img_ct)
                 plt.close()
-                
+
             if img_ct % 50 == 0:
                 print("%d images with facial landmarks completed." % img_ct)
                 
-    return np.array(landmarks), np.array(new_labels)
-            
-            
-        
+    percentage = count * 100 / len(images)
+    print('Image detected : %d / %d. (%.1f percent)' % (count, len(images), percentage))
+    print("Time for get_landmarks: --- %.2f minutes ---" % ((time.time() - start_time) / 60))
+
+    return np.array(landmarks_withoutHair), np.array(landmarks_withHair), np.array(landmarks_wearMask), np.array(new_labels)

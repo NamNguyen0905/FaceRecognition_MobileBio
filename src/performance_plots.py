@@ -113,13 +113,14 @@ def plot_scoreDist(gen_scores, imp_scores, far, frr, eer_index, optimal_threshol
     return
 
 def performance(gen_scores, imp_scores, plot_title, num_thresholds):          
-        thresholds = np.linspace(0, 1, num_thresholds)
-        far, frr, tar = compute_rates(gen_scores, imp_scores, thresholds)    
-        
-        dp = get_dprime(gen_scores, imp_scores)
-        eer, eer_index, optimal_threshold = get_eer(far, frr, thresholds)
-       
-        plot_roc(far, tar, plot_title)
-        plot_det(far, frr, eer, eer_index, plot_title)
-        plot_scoreDist(gen_scores, imp_scores, far, frr, eer_index, optimal_threshold, dp, plot_title)
-        
+    thresholds = np.linspace(0, 1, num_thresholds)
+    far, frr, tar = compute_rates(gen_scores, imp_scores, thresholds)    
+    
+    dp = get_dprime(gen_scores, imp_scores)
+    eer, eer_index, optimal_threshold = get_eer(far, frr, thresholds)
+   
+    plot_roc(far, tar, plot_title)
+    plot_det(far, frr, eer, eer_index, plot_title)
+    plot_scoreDist(gen_scores, imp_scores, far, frr, eer_index, optimal_threshold, dp, plot_title)
+    
+    return optimal_threshold
